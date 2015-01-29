@@ -17,10 +17,11 @@ from PlanetWars import PlanetWars
 
 import sys
 
-def DoTurn(pw, group_ids):
+def DoTurn(pw, group_ids, f):
   # (1) If we currently have a fleet in flight, just do nothing.
   if len(pw.MyFleets()) >= 2:
     return
+
   # (2) Find my strongest planet.
   source = -1
   source_score = -999999.0
@@ -37,14 +38,44 @@ def DoTurn(pw, group_ids):
   dest = -1
   dest_score = -999999.0
   not_my_planets = pw.NotMyPlanets()
+  
+  # (3.1) remove group members planets from list
+  tmp = []
   for p in not_my_planets:
-    score = 1.0 / (1 + p.NumShips())
+    if p.Owner() in group_ids:
+      continue
+    tmp.append(p)
+  not_my_planets = tmp
+  # f.write('not_my_planets: ' + ', '.join([str( p.Owner() ) for p in not_my_planets]) + '\n')
+  
+  # (3.2) remove planets which awaiting group member fleets
+  planet_ids = [] # not_my_planets ids
+  if not_my_planets:
+    planet_ids = ([p.PlanetID() for p in not_my_planets])
+  # f.write('planet_ids: ' + ', '.join([str( p ) for p in planet_ids]) + '\n')
+  # f.write('planet_ids: ' + ', '.join([str( p ) for p in planet_ids]) + '\n')
+  gfp_ids = [] # group_fleet_planet_ids
+  # f.write('EnemyFleets DestinationPlanets: ' + ', '.join([str( fl.DestinationPlanet() ) for fl in pw.EnemyFleets() ]) + '\n')
+  for fl in pw.EnemyFleets():
+    if fl.Owner() in group_ids and fl.DestinationPlanet() in planet_ids:
+      gfp_ids.append(fl.DestinationPlanet())
+  gfp_ids = set(gfp_ids)
+  # f.write('gfp_ids: ' + ', '.join([str( fl ) for fl in gfp_ids]) + '\n')
+
+  # not_my_planets = tmp
+  # f.write('not_my_planets: ' + ', '.join([str( p.Owner() ) for p in not_my_planets]) + '\n')
+  for p in not_my_planets:
+    if p.PlanetID() in gfp_ids:
+      continue 
+    score = 1.0 / (1 + p.NumShips()) # planet's score for attacking
     if score > dest_score:
       dest_score = score
       dest = p.PlanetID()
 
   # (4) Send half the ships from my strongest planet to the weakest
   # planet that I do not own.
+  
+  # f.write('IssueOrders: ' + ', '.join([str( p.Owner() ) for p in not_my_planets]) + '\n')
   if source >= 0 and dest >= 0:
     num_ships = source_num_ships / 2
     pw.IssueOrder(source, dest, num_ships)
@@ -63,7 +94,7 @@ def main():
     f.write(current_line + '\n')
     if len(current_line) >= 2 and current_line.startswith("go"):
       pw = PlanetWars(map_data)
-      DoTurn(pw, group_ids)
+      DoTurn(pw, group_ids, f)
       pw.FinishTurn()
       map_data = ''
     else:

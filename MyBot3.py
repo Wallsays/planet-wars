@@ -37,6 +37,14 @@ def DoTurn(pw, group_ids):
   dest = -1
   dest_score = -999999.0
   not_my_planets = pw.NotMyPlanets()
+
+  tmp = []
+  for p in not_my_planets:
+    if p.Owner() in group_ids:
+      continue
+    tmp.append(p)
+  not_my_planets = tmp
+
   for p in not_my_planets:
     score = 1.0 / (1 + p.NumShips())
     if score > dest_score:
@@ -51,7 +59,7 @@ def DoTurn(pw, group_ids):
 
 
 def main():
-  f = open('MyBot21_log.txt', 'w')
+  f = open('MyBot3_log.txt', 'w')
   group_ids = []
   if '-g' in sys.argv:
     group_ids = [int(k) for k in sys.argv[2].split(',')]
