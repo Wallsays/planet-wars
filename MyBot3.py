@@ -38,12 +38,23 @@ def DoTurn(pw, group_ids):
   dest_score = -999999.0
   not_my_planets = pw.NotMyPlanets()
 
+  # (3.1) remove group members planets from list
   tmp = []
   for p in not_my_planets:
     if p.Owner() in group_ids:
       continue
     tmp.append(p)
   not_my_planets = tmp
+  
+  # (3.2) remove planets which awaiting group member fleets
+  planet_ids = [] # not_my_planets ids
+  if not_my_planets:
+    planet_ids = ([p.PlanetID() for p in not_my_planets])
+  gfp_ids = [] # group_fleet_planet_ids
+  for fl in pw.EnemyFleets():
+    if fl.Owner() in group_ids and fl.DestinationPlanet() in planet_ids:
+      gfp_ids.append(fl.DestinationPlanet())
+  gfp_ids = set(gfp_ids)
 
   for p in not_my_planets:
     score = 1.0 / (1 + p.NumShips())
