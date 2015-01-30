@@ -212,6 +212,14 @@ class PlanetWars:
         return 0
     return 1
 
+  def SendMessage(self, nick, mes):
+    # f = open('MyBot4.log', 'w')
+    # f.write('----------------11--------------\n')
+    # f.write(str(nick) + ' ' + str(mes) + "\n")
+    stdout.write(str(nick) + ' ' + str(mes) + "\n")
+    # stdout.write('------------' + "\n")
+    stdout.flush()
+
   def FinishTurn(self):
     stdout.write("go\n")
     stdout.flush()
