@@ -22,6 +22,7 @@ def DoTurn(pw, group_ids, f):
   if len(pw.MyFleets()) >= 2:
     return
 
+
   # (2) Find my strongest planet.
   source = -1
   source_score = -999999.0
@@ -55,14 +56,32 @@ def DoTurn(pw, group_ids, f):
   # f.write('planet_ids: ' + ', '.join([str( p ) for p in planet_ids]) + '\n')
   # f.write('planet_ids: ' + ', '.join([str( p ) for p in planet_ids]) + '\n')
   gfp_ids = [] # group_fleet_planet_ids
+  # gfp_need_help_ids = [] # group_fleet_planet_ids
   # f.write('EnemyFleets DestinationPlanets: ' + ', '.join([str( fl.DestinationPlanet() ) for fl in pw.EnemyFleets() ]) + '\n')
   for fl in pw.EnemyFleets():
-    if fl.Owner() in group_ids and fl.DestinationPlanet() in planet_ids:
+    # f.write('fl.NumShips(): ' + str(fl.NumShips()) + '\n')
+    # f.write('fl.DestinationPlanet(): ' + str(fl.DestinationPlanet()) + '\n')
+    # f.write('fl.DestinationPlanet().NumShips(): ' + str(fl.DestinationPlanet().NumShips()) + '\n')
+    if fl.Owner() in group_ids and fl.DestinationPlanet() in planet_ids: # and fl.NumShips() > fl.DestinationPlanet().NumShips(): #  + fl.DestinationPlanet().GrowthRate() * fl.TurnsRemaining() ):
       gfp_ids.append(fl.DestinationPlanet())
   gfp_ids = set(gfp_ids)
   # f.write('gfp_ids: ' + ', '.join([str( fl ) for fl in gfp_ids]) + '\n')
 
-  # (3.3) remove planets which awaiting my fleets
+  # (3.3) calculate enemy planets which need help from team-mates
+  need_help_p = []
+  for p in not_my_planets:
+    if p.PlanetID() in gfp_ids and p.Owner() == 2 :
+      ships_awaiting = 0 
+      for fl in pw.EnemyFleets():
+        if fl.Owner() in group_ids and fl.DestinationPlanet() == p.PlanetID():
+          ships_awaiting += fl.NumShips()
+      # f.write('ships_awaiting: ' + str(ships_awaiting) + '\n')
+      if ships_awaiting < ( p.NumShips() + p.GrowthRate() * fl.TurnsRemaining() ):
+        need_help_p.append(p)
+  f.write('need_help_p ids: ' + ', '.join([str( pl.PlanetID() ) for pl in need_help_p ]) + '\n')
+  
+
+  # (3.4) remove planets which awaiting my fleets
   my_fp_ids = [] # my_fleet_planet_ids
   # f.write('EnemyFleets DestinationPlanets: ' + ', '.join([str( fl.DestinationPlanet() ) for fl in pw.EnemyFleets() ]) + '\n')
   for fl in pw.MyFleets():
@@ -77,11 +96,29 @@ def DoTurn(pw, group_ids, f):
   # not_my_planets = tmp
   # f.write('not_my_planets: ' + ', '.join([str( p.Owner() ) for p in not_my_planets]) + '\n')
   planets_rank = [] 
+  need_help_pids = ([p.PlanetID() for p in need_help_p])
+  f.write('need_help_pids: ' + ', '.join([str( p ) for p in need_help_pids]) + '\n')
   for p in not_my_planets:
-    if p.PlanetID() in gfp_ids or p.PlanetID() in my_fp_ids:
+    # if p.PlanetID() in gfp_ids or p.PlanetID() in my_fp_ids:
+    if (p.PlanetID() in gfp_ids and p.PlanetID() not in need_help_pids) or p.PlanetID() in my_fp_ids:
       continue 
+    safety = 1.0
+    tmp = []
+    for plt in not_my_planets:
+      # distance to enemy planets
+      if plt.PlanetID() in gfp_ids or plt.PlanetID() in my_fp_ids or plt.Owner() == 0:
+        continue
+      tmp.append(pw.Distance(p.PlanetID(), plt.PlanetID())) 
+    if tmp != 0:
+      f.write('tmp: ' + ', '.join([str( ttt ) for ttt in tmp]) + '\n')
+      tmp.sort(reverse=True)
+      f.write('tmp: ' + ', '.join([str( ttt ) for ttt in tmp]) + '\n')
+      safety = safety / (sum(tmp[:5]) + 1.0)
+      f.write('safety: ' + str(safety) + '\n')
+
     # planet's score for obtaining
-    score = (1.0 * p.GrowthRate() ) / (1 + p.NumShips() + pw.Distance(source.PlanetID(), p.PlanetID())) 
+    # score = (1.0 * p.GrowthRate() ) / (1 + p.NumShips()**pw.Distance(source.PlanetID(), p.PlanetID())) 
+    score = (1.0 + p.GrowthRate()/source.GrowthRate() + safety) / (1.0 + p.NumShips()/source.NumShips() + 2**pw.Distance(source.PlanetID(), p.PlanetID())) 
     planets_rank.append([p, score])
     # if score > dest_score:
     #   dest_score = score
@@ -103,10 +140,12 @@ def DoTurn(pw, group_ids, f):
     req_num_ships = dest.NumShips()
     f.write('req_num_ships: ' + str(req_num_ships) + '\n')
     add_ships = 1
-    if dest.Owner() == 2: # foe (not neutral)
+    f.write('dest.Owner(): ' + str(dest.Owner()) + '\n')
+    if dest.Owner() != 0 and dest.Owner() not in group_ids: # foe (not neutral)
       add_ships += dest.GrowthRate()  * int(pw.Distance(source.PlanetID(), dest.PlanetID() ))
       f.write('add_ships: ' + str(add_ships) + '\n')
     num_ships = req_num_ships * 2 + add_ships
+    # num_ships = req_num_ships * 2 - req_num_ships/4 + add_ships
     f.write('num_ships: ' + str(num_ships) + '\n')
     if (source.NumShips() - sent_ships - num_ships) >= 0:
       sent_ships += num_ships
@@ -117,7 +156,7 @@ def DoTurn(pw, group_ids, f):
 
 
 def main():
-  f = open('MyBot2_log.txt', 'w')
+  f = open('MyBot2.log', 'w')
   group_ids = []
   if '-g' in sys.argv:
     group_ids = [int(k) for k in sys.argv[2].split(',')]
@@ -129,7 +168,9 @@ def main():
     f.write(current_line + '\n')
     if len(current_line) >= 2 and current_line.startswith("go"):
       pw = PlanetWars(map_data)
+      f.write('--------------- NEW TURN ----------------------------\n')
       DoTurn(pw, group_ids, f)
+      f.write('-----------------------------------------------------\n')
       pw.FinishTurn()
       map_data = ''
     else:

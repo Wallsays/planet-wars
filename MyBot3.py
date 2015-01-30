@@ -70,7 +70,7 @@ def DoTurn(pw, group_ids):
 
 
 def main():
-  f = open('MyBot3_log.txt', 'w')
+  f = open('MyBot3.log', 'w')
   group_ids = []
   if '-g' in sys.argv:
     group_ids = [int(k) for k in sys.argv[2].split(',')]
