@@ -131,14 +131,14 @@ def main():
   while(True):
     current_line = raw_input()
     f.write(current_line + '\n')
-    if len(current_line) >= 2 and current_line.startswith("go"):
+    if len(current_line) >= 1 and current_line.startswith("."):
       pw = PlanetWars(map_data)
+      f.write('-------------- NEW TURN ----------------\n')
       DoTurn(pw, group_ids, f)
-      f.write('-------------- 1 ----------------\n')
       mes = random.randint(-214783648, 2147483647)
-      f.write(str(mes) + '\n')
       pw.SendMessage(nickname,mes)
-      f.write('-------------- 2 ----------------\n')
+      # f.write(str(mes) + '\n')
+      f.write('----------------------------------------\n')
       pw.FinishTurn()
       map_data = ''
     else:

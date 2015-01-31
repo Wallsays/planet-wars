@@ -221,5 +221,5 @@ class PlanetWars:
     stdout.flush()
 
   def FinishTurn(self):
-    stdout.write("go\n")
+    stdout.write(".\n")
     stdout.flush()

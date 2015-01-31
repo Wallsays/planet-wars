@@ -228,7 +228,8 @@ def serialize_game_state(planets, fleets, player_messages, pov):
   message = "\n".join([serialize_planet(p, pov) for p in planets]) + \
     "\n" + "\n".join([serialize_fleet(f, pov) for f in fleets]) + \
     "\n" + "\n".join([str(mes.upper()) for mes in player_messages]) + \
-    "\ngo\n"
+    "\n.\n"
+  # MARK: End-game string
   return message.replace("\n\n", "\n")
 
 # Turns a list of planets into a string in playback format. This is the initial
@@ -356,7 +357,8 @@ def play_game(map, max_turn_time, max_turns, players, debug=False):
         if line is None:
           continue
         line = line.strip().lower()
-        if line == "go":
+        # MARK: End-game string
+        if line == ".":
           client_done[i] = True
         # Get messages from players
         elif re.match( r'^[a-z][0-9]\s[-]{0,1}[0-9]{1,10}$', line, re.M):
