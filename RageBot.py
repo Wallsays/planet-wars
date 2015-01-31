@@ -23,7 +23,7 @@ def DoTurn(pw, group_ids, nickname):
   pw.SendMessage(nickname,mes)
 
   # (1) If we currently have a fleet in flight, just do nothing.
-  if len(pw.MyFleets()) >= 2:
+  if len(pw.MyFleets()) >= 1:
     return
   # (2) Find my strongest planet.
   source = -1
@@ -36,6 +36,9 @@ def DoTurn(pw, group_ids, nickname):
       source_score = score
       source = p.PlanetID()
       source_num_ships = p.NumShips()
+
+  if int(source_num_ships) <= 50:
+    return
 
   # (3) Find the weakest enemy or neutral planet.
   dest = -1
@@ -69,7 +72,7 @@ def DoTurn(pw, group_ids, nickname):
   # (4) Send half the ships from my strongest planet to the weakest
   # planet that I do not own.
   if source >= 0 and dest >= 0:
-    num_ships = source_num_ships / 2
+    num_ships = int(source_num_ships * .75)
     pw.IssueOrder(source, dest, num_ships)
 
 

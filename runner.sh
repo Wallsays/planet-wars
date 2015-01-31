@@ -22,4 +22,4 @@
 # python war2.py 13 "python ./MyBot4.py" "python ./MyBot3.py" --gui
 
 # Nickanmes format: %s%d (ex. R1)
-python war2.py 13 "python ./MyBot4.py -g 4 -n J1" "python ./MyBot3.py -g 3 -n K1" --gui
+python war2.py 16 "python ./RageBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n J1" "python ./MyBot3.py -g 3 -n K1" --gui
