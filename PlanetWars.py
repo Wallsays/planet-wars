@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 #
 
+import re
 from math import ceil, sqrt
 from sys import stdout
 
+class Message:
+  def __init__(self, nickname, number):
+    self._nickname = nickname
+    self._number = number
+
+  def Nickname(self):
+    return self._nickname
+
+  def Number(self):
+    return self._number
 
 class Fleet:
   def __init__(self, owner, num_ships, source_planet, destination_planet, \
@@ -76,6 +87,7 @@ class PlanetWars:
   def __init__(self, gameState):
     self._planets = []
     self._fleets = []
+    self._messages = []
     self.ParseGameState(gameState)
 
   def NumPlanets(self):
@@ -92,6 +104,9 @@ class PlanetWars:
 
   def Planets(self):
     return self._planets
+
+  def Messages(self):
+    return self._messages
 
   def MyPlanets(self):
     r = []
@@ -179,6 +194,7 @@ class PlanetWars:
   def ParseGameState(self, s):
     self._planets = []
     self._fleets = []
+    self._messages = []
     lines = s.split("\n")
     planet_id = 0
 
@@ -208,16 +224,18 @@ class PlanetWars:
                   int(tokens[5]), # Total trip length
                   int(tokens[6])) # Turns remaining
         self._fleets.append(f)
+      elif re.match( r'^[A-Z][0-9]', tokens[0], re.M):
+        if len(tokens) != 2:
+          return 0
+        m = Message(str(tokens[0]), # Nickname
+                    int(tokens[1])) # Number
+        self._messages.append(m)
       else:
         return 0
     return 1
 
   def SendMessage(self, nick, mes):
-    # f = open('MyBot4.log', 'w')
-    # f.write('----------------11--------------\n')
-    # f.write(str(nick) + ' ' + str(mes) + "\n")
     stdout.write(str(nick) + ' ' + str(mes) + "\n")
-    # stdout.write('------------' + "\n")
     stdout.flush()
 
   def FinishTurn(self):

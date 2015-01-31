@@ -18,9 +18,18 @@ from PlanetWars import PlanetWars
 import random
 import sys
 
+messageHistory = []
+allies_nicks = []
+
 def DoTurn(pw, group_ids, nickname):
-  mes = random.randint(-214783648, 2147483647)
+  if not messageHistory:
+    mes = pw.MyPlanets()[0].PlanetID()
+  else:
+    mes = random.randint(-214783648, 2147483647)
   pw.SendMessage(nickname,mes)
+
+  for mes in pw.Messages():
+    messageHistory.append((mes.Nickname(), mes.Number()))
 
   # (1) If we currently have a fleet in flight, just do nothing.
   if len(pw.MyFleets()) >= 2:

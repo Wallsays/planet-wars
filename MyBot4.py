@@ -18,9 +18,46 @@ from PlanetWars import PlanetWars
 import random
 import sys
 
+messageHistory = []
+allies_nicks = []
+
 def DoTurn(pw, group_ids, nickname, f):
-  mes = random.randint(-214783648, 2147483647)
+
+  # write message log
+  tmp = []
+  for mes in pw.Messages():
+    tmp.append((mes.Nickname(), mes.Number()))
+  messageHistory.append(tmp)
+
+  # send planet position
+  if not messageHistory:
+    mes = pw.MyPlanets()[0].PlanetID()
+  else:
+    mes = random.randint(-214783648, 2147483647)
+
+  # # find out and remember party nickname  
+  if not allies_nicks and messageHistory:
+    tmp = messageHistory[-1]
+    for msh in tmp:
+      # f.write('=====msh[1]' + str(msh[1] ) + '\n')
+      for pln in pw.Planets():
+        if pln.PlanetID() == int(msh[1]) and \
+          pln.Owner() in group_ids:
+          # f.write('=====if' + str(pln.PlanetID() ) + '\n')
+          for gip in group_ids:
+            if pln.Owner() == int(gip):
+              allies_nicks.append(( msh[0], pln.Owner() ))
+              # f.write('=====planet.Owner()' + str(pln.Owner() ) + '\n')
+              
+
+        
+  f.write('======= ' + str(messageHistory) + '\n')
+  f.write('======= ' + str(allies_nicks) + '\n')
   pw.SendMessage(nickname,mes)
+
+
+
+    # f.write('======= ' + str(mes.Number()) + '\n')
 
   # (1) If we currently have a fleet in flight, just do nothing.
   # if len(pw.MyFleets()) >= 2:
@@ -64,8 +101,6 @@ def DoTurn(pw, group_ids, nickname, f):
     winRatio = float(mySize)/enemySize
     # winRatio = float(mySize + alliesSize/enemyGrowth) / (enemySize/(myGrowth+alliesGrowth))
 
-  f.write('======= winRatio: ' + str(mySize) + '\n')
-  f.write('======= winRatio: ' + str(enemySize) + '\n')
   f.write('======= winRatio: ' + str(winRatio) + '\n')
 
   # (2) Find my strongest planet.

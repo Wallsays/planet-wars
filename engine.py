@@ -78,7 +78,7 @@ def serialize_fleet(f, pov):
 def serialize_message(mes, pov):
   # mes_nick = re.match( r'^[a-z][1-9]', message, re.M).group()
   # text = re.match( r'^[a-z][1-9]', message, re.M).group()
-  text = mew
+  text = mes.upper()
   message = str(text)
   return message.replace(".0 ", " ")
 
@@ -227,7 +227,7 @@ def remaining_players(planets, fleets):
 def serialize_game_state(planets, fleets, player_messages, pov):
   message = "\n".join([serialize_planet(p, pov) for p in planets]) + \
     "\n" + "\n".join([serialize_fleet(f, pov) for f in fleets]) + \
-    "\n" + "\n".join([str(mes.upper()) for mes in player_messages]) + \
+    "\n" + "\n".join([serialize_message(mes, pov) for mes in player_messages]) + \
     "\n.\n"
   # MARK: End-game string
   return message.replace("\n\n", "\n")
