@@ -25,10 +25,12 @@ def runnable_ize(bot):
     if bot.endswith(".jar"):
         return 'java -jar %s' % bot
     else:
-        return './%s' % bot
+        # return './%s' % bot
+        return bot
 
 def main(map, bots, gui=False):
     players = [ { "path" : ".", "command" : runnable_ize(bot) } for bot in bots]
+    print str(players)
     mapfile = "maps/map%s.txt" % map
     outcome = engine.play_game(mapfile, 1000, 200, players, False)
     sys.stdout.write("game result: \n%s\n" %\

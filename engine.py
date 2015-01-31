@@ -5,6 +5,7 @@ import shlex
 import subprocess
 import sys
 import time
+import re
 from user_sadbox import Sadbox
 
 # Reads a text file that contains a game state, and returns the game state. A
@@ -70,6 +71,15 @@ def serialize_fleet(f, pov):
   message = "F " + str(owner) + " " + str(int(f["num_ships"])) + " " + \
     str(int(f["source"])) + " " + str(int(f["destination"])) + " " + \
     str(int(f["total_trip_length"])) + " " + str(int(f["turns_remaining"]))
+  return message.replace(".0 ", " ")
+
+# Generates a string representation of a message. This is used to send data
+# about the messages to the client programs.
+def serialize_message(mes, pov):
+  # mes_nick = re.match( r'^[a-z][1-9]', message, re.M).group()
+  # text = re.match( r'^[a-z][1-9]', message, re.M).group()
+  text = mew
+  message = str(text)
   return message.replace(".0 ", " ")
 
 # Takes a string which contains an order and parses it, returning the order in
@@ -214,9 +224,11 @@ def remaining_players(planets, fleets):
   return players
 
 # Returns a string representation of the entire game state.
-def serialize_game_state(planets, fleets, pov):
+def serialize_game_state(planets, fleets, player_messages, pov):
   message = "\n".join([serialize_planet(p, pov) for p in planets]) + \
-    "\n" + "\n".join([serialize_fleet(f, pov) for f in fleets]) + "\ngo\n"
+    "\n" + "\n".join([serialize_fleet(f, pov) for f in fleets]) + \
+    "\n" + "\n".join([str(mes.upper()) for mes in player_messages]) + \
+    "\ngo\n"
   return message.replace("\n\n", "\n")
 
 # Turns a list of planets into a string in playback format. This is the initial
@@ -298,6 +310,7 @@ def play_game(map, max_turn_time, max_turns, players, debug=False):
   planets, fleets = read_map_file(map)
   playback = planet_to_playback_format(planets) + "|"
   clients = []
+  player_messages = []
   if debug:
     sys.stderr.write("starting client programs\n")
   for i, p in enumerate(players):
@@ -325,7 +338,7 @@ def play_game(map, max_turn_time, max_turns, players, debug=False):
     for i, c in enumerate(clients):
       if (i+1) not in remaining:
         continue
-      message = serialize_game_state(planets, fleets, i+1)
+      message = serialize_game_state(planets, fleets, player_messages, i+1)
       if debug:
         sys.stderr.write("engine > player" + str(i+1) + ":\n")
         sys.stderr.write(message)
@@ -333,6 +346,7 @@ def play_game(map, max_turn_time, max_turns, players, debug=False):
     client_done = [False] * len(clients)
     start_time = time.time()
     time_limit = float(max_turn_time) / 1000
+    player_messages = []
     # Get orders from players
     while not all_true(client_done) and time.time() - start_time < time_limit:
       for i, c in enumerate(clients):
@@ -344,6 +358,11 @@ def play_game(map, max_turn_time, max_turns, players, debug=False):
         line = line.strip().lower()
         if line == "go":
           client_done[i] = True
+        # Get messages from players
+        elif re.match( r'^[a-z][0-9]\s[-]{0,1}[0-9]{1,10}$', line, re.M):
+          player_messages.append(line + '\n')
+          # sys.stderr.write("player " + str(i+1) + " message: " + line + "\n")
+          continue
         else:
           order = parse_order_string(line)
           if order is None:
