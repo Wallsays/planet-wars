@@ -158,6 +158,8 @@ def DoTurn(pw, group_ids, nickname, f):
               for my_pl in myPlanets:
                 if my_pl.NumShips() < my_pl.GrowthRate()*10:
                   continue
+                if att_pln.Owner() == 1:
+                  continue
                 f.write('score: pw.Distance(...): ' + str(pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())) + '\n')
                 score = float(my_pl.NumShips()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
                 scores.append([my_pl, score])
@@ -319,6 +321,11 @@ def DoTurn(pw, group_ids, nickname, f):
             attack_targets[att_pln.PlanetID()] += [source1.PlanetID(), req_ships]
           else:
             attack_targets[att_pln.PlanetID()] = [source1.PlanetID(), req_ships]
+          if req_ships > 0 and \
+            available_ships[source1.PlanetID()] >= req_ships:
+            f.write('av: ' + str(available_ships[source1.PlanetID()]) + '\n')
+            available_ships[source1.PlanetID()] -= req_ships
+            pw.IssueOrder(source1.PlanetID(), att_pln.PlanetID(), req_ships)
         else:  
           next_targets.append(att_pln.PlanetID())
     else:  

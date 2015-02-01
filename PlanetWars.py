@@ -182,6 +182,28 @@ class PlanetWars:
       r.append(f)
     return r
 
+
+  # Returns the number of ships that the current player has, either located
+  # on planets or in flight.
+  def NumShips(self, playerID):
+    numShips = 0
+    for p in self._planets:
+      if p.Owner() == playerID:
+        numShips += p.NumShips()
+    for f in self._fleets:
+      if f.Owner() == playerID:
+        numShips += f.NumShips()
+    return int(numShips)
+    
+  # Returns the number of income ships that the current player has
+  def Production(self, playerID):
+    numShips = 0
+    for p in self._planets:
+      if p.Owner() == playerID:
+        numShips += p.GrowthRate()
+    return int(numShips)
+
+
   def ToString(self):
     s = ''
     for p in self._planets:
