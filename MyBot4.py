@@ -69,6 +69,31 @@ def DoTurn(pw, group_ids, nickname, f):
   myPlanets = []
   enemyPlanets = []
   alliesPlanets = []
+  # Fleets
+  myFleets = []
+  partyFleets = []
+  alliesFleets = []
+  enemyFleets = []
+
+  # Group fleets
+  for fleet in pw.Fleets():
+    if fleet.Owner() == 1 or \
+      fleet.Owner() in group_ids:
+      partyFleets.append(fleet)
+
+  # My fleets
+  for fleet in pw.MyFleets():
+    myFleets.append(fleet)
+
+  # Allies fleets
+  for fleet in pw.EnemyFleets():
+    if fleet.Owner() in group_ids:
+      alliesFleets.append(fleet)
+
+  # Enemy fleets
+  for fleet in pw.EnemyFleets():
+    if fleet.Owner() not in group_ids:
+      enemyFleets.append(fleet)
 
   # My power
   for p in pw.MyPlanets():
@@ -104,6 +129,12 @@ def DoTurn(pw, group_ids, nickname, f):
   f.write('available_ships: ' + str(available_ships) + '\n')
 
 
+  f.write('======= Stop Spreading Enemy on NP ======= \n')
+  for efl in enemyFleets:
+    if efl.TurnsRemaining() < 5 and\
+      pw.GetPlanet(efl.DestinationPlanet()).Owner() == 0:
+      enemyPlanets.append(pw.GetPlanet(efl.DestinationPlanet()))
+
   f.write('======= Co-op Targets Processing ======= \n')
   if len(messageHistory) > 2:
     for msh in messageHistory[-1]:
@@ -113,27 +144,39 @@ def DoTurn(pw, group_ids, nickname, f):
         targets.append(int(str(msh[1])[0:3:]) - 100)
         targets.append(int(str(msh[1])[3:6:]) - 100)
         targets.append(int(str(msh[1])[6:9:]) - 100)
-        f.write('target1: ' + str(targets) + '\n')
+        f.write('targets: ' + str(targets) + '\n')
         for trg in targets:
-          # f.write('next_targets: ' + str(next_targets) + '\n')
+          f.write('next_targets: ' + str(next_targets) + '\n')
           if trg in next_targets:
             att_pln = pw.GetPlanet(trg)
+            # f.write('att_pln: ' + str(att_pln) + '\n')
             req_ships = int(att_pln.NumShips() * .10)
             f.write('req_ships: ' + str(req_ships) + '\n')
             f.write('attack_planet: ' + str(att_pln) + '\n')
             if (alliesSize + mySize) > req_ships:
-              distances = []
+              scores = []
               for my_pl in myPlanets:
-                if my_pl.NumShips() < my_pl.GrowthRate()*4:
+                if my_pl.NumShips() < my_pl.GrowthRate()*10:
                   continue
-                dist = pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
-                distances.append([my_pl, dist])
-              distances.sort(key=lambda x: x[1], reverse=True)
-              f.write('distances: ' + str(distances) + '\n')
+                f.write('score: pw.Distance(...): ' + str(pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())) + '\n')
+                score = float(my_pl.NumShips()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+                scores.append([my_pl, score])
+              scores.sort(key=lambda x: x[1], reverse=True)
+              f.write('scores: ' + str(scores) + '\n')
               
+              distances = scores
               # req_orig_ships = att_pln.NumShips()
               # f.write('req_orig_ships: ' + str(req_orig_ships) + '\n')
-              # req_ships = att_pln.NumShips() + 1
+              req_ships = att_pln.NumShips() + 1
+              still_need = req_ships
+              # f.write('enemyFleets: ' + str(enemyFleets) + '\n')
+              # send only req-d num of ships
+              for flt in partyFleets:
+                if flt.DestinationPlanet() == att_pln.PlanetID():
+                  still_need += flt.NumShips() - (att_pln.GrowthRate() * flt.TurnsRemaining())*2
+              req_ships = still_need
+
+
               if len(distances) > 0:
                 source1 = distances[0][0] # source planet
                 if len(distances) > 1:
@@ -149,27 +192,33 @@ def DoTurn(pw, group_ids, nickname, f):
                       f.write('111 2\n')
                       source2 = source1
                     else:
-                      koef1= source1.NumShips() / att_pln.NumShips() 
-                      koef2= source2.NumShips() / att_pln.NumShips() 
-                      if koef1 > koef2:
-                        koef = koef2/koef1
+                      if att_pln.NumShips() == 0:
+                        koef1 = 1
+                        koef2 = 1
                       else:
-                        koef = koef1/koef2
-                      req_ships1 = req_ships*koef
-                      req_ships2 = req_ships - req_ships1
-                      if available_ships[source1.PlanetID()] >= req_ships1 and \
-                        available_ships[source2.PlanetID()] >= req_ships2:
-                        "ee"
-                        # available_ships[source1.PlanetID()] -= req_ships1
-                        # available_ships[source2.PlanetID()] -= req_ships2
-                        # pw.IssueOrder(source1.PlanetID(), att_pln.PlanetID(), req_ships1)
-                        # pw.IssueOrder(source2.PlanetID(), att_pln.PlanetID(), req_ships2)
+                        koef1= float(source1.NumShips()) / att_pln.NumShips() 
+                        koef2= float(source2.NumShips()) / att_pln.NumShips() 
+                      if koef1 > 0 and koef2 >0:
+                        if koef1 > koef2:
+                          koef = koef2/koef1
+                        else:
+                          koef = koef1/koef2
+                        req_ships1 = req_ships*koef
+                        req_ships2 = req_ships - req_ships1
+                        if available_ships[source1.PlanetID()] >= req_ships1 and \
+                          available_ships[source2.PlanetID()] >= req_ships2:
+                          "ee"
+                          # available_ships[source1.PlanetID()] -= req_ships1
+                          # available_ships[source2.PlanetID()] -= req_ships2
+                          # pw.IssueOrder(source1.PlanetID(), att_pln.PlanetID(), req_ships1)
+                          # pw.IssueOrder(source2.PlanetID(), att_pln.PlanetID(), req_ships2)
                 if len(distances) == 1 or \
                   source1.PlanetID() == source2.PlanetID():
                   f.write('222\n')
-                  # req_ships += att_pln.GrowthRate()*distances[0][1]
+                  req_ships += att_pln.GrowthRate()*distances[0][1]
+                  # req_ships += att_pln.GrowthRate()*pw.Distance(source1.PlanetID(), att_pln.PlanetID())
                   # req_ships += att_pln.GrowthRate()*3
-                  req_ships += available_ships[source1.PlanetID()] - 10
+                  # req_ships += available_ships[source1.PlanetID()] - 10
                   f.write("new req: " + str(req_ships) + '\n')
                   f.write("available: " + str(available_ships[source1.PlanetID()]) + '\n')
                   if req_ships > 0 and \
@@ -194,6 +243,9 @@ def DoTurn(pw, group_ids, nickname, f):
   for att_pln in enemyPlanets:
     distances = []
     for my_pl in myPlanets:
+      if my_pl.NumShips() < my_pl.GrowthRate()*10:
+          continue
+      # score = float(my_pl.NumShips()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
       dist = pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
       distances.append([my_pl, dist])
     distances.sort(key=lambda x: x[1], reverse=True)
@@ -203,44 +255,94 @@ def DoTurn(pw, group_ids, nickname, f):
     # f.write('req_orig_ships: ' + str(req_orig_ships) + '\n')
     req_ships = att_pln.NumShips() + 1
     f.write('req_ships: ' + str(req_ships) + '\n')
-    source1 = distances[0][0] # source planet
-    if len(distances) > 1:
-      f.write('111\n')
-      source2 = distances[1][0] 
-      if source1.NumShips() > 0 and source2.NumShips() > 0:
-        # f.write('111 1: ' + str(float(source1.NumShips()) / source2.NumShips()) +'\n')
-        # if source1 is very strong
-        if float(source1.NumShips()) / source2.NumShips() > 3:
-          source1 = source2
-        # if source2 is very strong
-        elif float(source2.NumShips()) / source1.NumShips() > 3:
-          f.write('111 2\n')
-          source2 = source1
-        else:
-          koef1= source1.NumShips() / att_pln.NumShips() 
-          koef2= source2.NumShips() / att_pln.NumShips() 
-          if available_ships[source1.PlanetID()] >= req_ships and \
-            available_ships[source2.PlanetID()] >= req_ships:
-            available_ships[source1.PlanetID()] -= req_ships
-            if attack_targets.has_key(att_pln.PlanetID()):
-              attack_targets[att_pln.PlanetID()] += [source1.PlanetID(), req_ships]
-            else:
-              attack_targets[att_pln.PlanetID()] = [source1.PlanetID(), req_ships]
-    if len(distances) == 1 or \
-      source1.PlanetID() == source2.PlanetID():
-      f.write('222\n')
-      req_ships += att_pln.GrowthRate()*distances[0][1]
-      req_ships += att_pln.GrowthRate()*3
-      f.write("new req: " + str(req_ships) + '\n')
-      if available_ships[source1.PlanetID()] >= req_ships:
-        f.write('av: ' + str(available_ships[source1.PlanetID()]) + '\n')
-        available_ships[source1.PlanetID()] -= req_ships
-        if attack_targets.has_key(att_pln.PlanetID()):
-          attack_targets[att_pln.PlanetID()] += [source1.PlanetID(), req_ships]
-        else:
-          attack_targets[att_pln.PlanetID()] = [source1.PlanetID(), req_ships]
-      else:  
-        next_targets.append(att_pln.PlanetID())
+    if len(distances) > 0:
+      source1 = distances[0][0] # source planet
+      if len(distances) > 1:
+        f.write('111\n')
+        source2 = distances[1][0] 
+        if source1.NumShips() > 0 and source2.NumShips() > 0:
+          # f.write('111 1: ' + str(float(source1.NumShips()) / source2.NumShips()) +'\n')
+          # if source1 is very strong
+          if float(source1.NumShips()) / source2.NumShips() > 3:
+            f.write('111 1\n')
+            source1 = source2
+          # if source2 is very strong
+          elif float(source2.NumShips()) / source1.NumShips() > 3:
+            f.write('111 2\n')
+            source2 = source1
+          else:
+            f.write('111 3\n')
+            if source1.NumShips() > 0 and source2.NumShips() > 0:
+              if att_pln.NumShips() == 0:
+                koef1 = 1
+                koef2 = 1
+              else:
+                koef1= float(source1.NumShips()) / att_pln.NumShips() 
+                koef2= float(source2.NumShips()) / att_pln.NumShips() 
+              if koef1 > 0 and koef2 >0:
+                if koef1 > koef2:
+                  koef = koef2/koef1
+                else:
+                  koef = koef1/koef2
+                req_ships1 = req_ships*koef
+                req_ships2 = req_ships - req_ships1
+                if available_ships[source1.PlanetID()] >= req_ships1 and \
+                  available_ships[source2.PlanetID()] >= req_ships2:
+                # koef1= source1.NumShips() / att_pln.NumShips() 
+                # koef2= source2.NumShips() / att_pln.NumShips() 
+                # if available_ships[source1.PlanetID()] >= req_ships and \
+                #   available_ships[source2.PlanetID()] >= req_ships:
+                  # available_ships[source1.PlanetID()] -= req_ships
+                  # if attack_targets.has_key(att_pln.PlanetID()):
+                  #   attack_targets[att_pln.PlanetID()] += [source1.PlanetID(), req_ships]
+                  # else:
+                  #   attack_targets[att_pln.PlanetID()] = [source1.PlanetID(), req_ships]
+                  # "ee"
+                  available_ships[source1.PlanetID()] -= req_ships1
+                  available_ships[source2.PlanetID()] -= req_ships2
+                  pw.IssueOrder(source1.PlanetID(), att_pln.PlanetID(), req_ships1)
+                  pw.IssueOrder(source2.PlanetID(), att_pln.PlanetID(), req_ships2)
+
+
+            else:  
+              next_targets.append(att_pln.PlanetID())
+      if len(distances) == 1 or \
+        source1.PlanetID() == source2.PlanetID():
+        f.write('222\n')
+        req_ships += att_pln.GrowthRate()*distances[0][1]
+        req_ships += att_pln.GrowthRate()*3
+        f.write("new req: " + str(req_ships) + '\n')
+        if available_ships[source1.PlanetID()] >= req_ships:
+          f.write('av: ' + str(available_ships[source1.PlanetID()]) + '\n')
+          available_ships[source1.PlanetID()] -= req_ships
+          if attack_targets.has_key(att_pln.PlanetID()):
+            attack_targets[att_pln.PlanetID()] += [source1.PlanetID(), req_ships]
+          else:
+            attack_targets[att_pln.PlanetID()] = [source1.PlanetID(), req_ships]
+        else:  
+          next_targets.append(att_pln.PlanetID())
+    else:  
+      next_targets.append(att_pln.PlanetID())
+  
+  f.write('next_targets (init): ' + str(next_targets) + '\n')
+
+  tmp = []
+  score = -999999
+  for nt in next_targets:
+    nt = pw.GetPlanet(nt)
+    gr = nt.GrowthRate()
+    sr = nt.NumShips()
+    if nt.GrowthRate() == 0:
+      gr = 1
+    if nt.NumShips() == 0:
+      sr = 1
+    score = gr / sr
+    tmp.append([nt.PlanetID(), score])
+  tmp.sort(key=lambda x: x[1], reverse=True)
+  # next_targets = []
+  del next_targets[:]
+  for pl_rate in tmp:
+    next_targets.append(pl_rate[0])
 
 
   f.write('attack_targets: ' + str(attack_targets) + '\n')

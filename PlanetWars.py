@@ -44,6 +44,18 @@ class Fleet:
   def TurnsRemaining(self):
     return self._turns_remaining
 
+  def __str__(self):
+    message = "F " + str(self._owner) + " " + str(self._num_ships) + " " + \
+      str(self._source_planet) + " " + str(self._destination_planet) + " " + \
+      str(self._total_trip_length) + " " + str(self._turns_remaining)
+    return message.replace(".0 ",  " ")
+
+  def __repr__(self):
+    message = "F " + str(self._owner) + " " + str(self._num_ships) + " " + \
+      str(self._source_planet) + " " + str(self._destination_planet) + " " + \
+      str(int(self._total_trip_length)) + " " + str(int(self._turns_remaining))
+    return message.replace(".0 ", " ")
+
 
 class Planet:
   def __init__(self, planet_id, owner, num_ships, growth_rate, x, y):
@@ -85,7 +97,14 @@ class Planet:
   def __str__(self):
     message = "P " + str(self._x) + " " + str(self._y) + " " + str(self._owner) + \
     " " + str(int(self._num_ships)) + " " + str(int(self._growth_rate))
+    return message.replace(".0 ",  " ")
+
+  def __repr__(self):
+    # return 'MyClass #%d' % (self.id,)
+    message = "P " + str(self._x) + " " + str(self._y) + " " + str(self._owner) + \
+    " " + str(int(self._num_ships)) + " " + str(int(self._growth_rate))
     return message.replace(".0 ", " ")
+
 
 class PlanetWars:
   def __init__(self, gameState):
