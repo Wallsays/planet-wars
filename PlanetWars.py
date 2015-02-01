@@ -82,6 +82,10 @@ class Planet:
   def RemoveShips(self, amount):
     self._num_ships -= amount
 
+  def __str__(self):
+    message = "P " + str(self._x) + " " + str(self._y) + " " + str(self._owner) + \
+    " " + str(int(self._num_ships)) + " " + str(int(self._growth_rate))
+    return message.replace(".0 ", " ")
 
 class PlanetWars:
   def __init__(self, gameState):

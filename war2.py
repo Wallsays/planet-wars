@@ -31,7 +31,7 @@ def runnable_ize(bot):
 def main(map, bots, gui=False):
     players = [ { "path" : ".", "command" : runnable_ize(bot) } for bot in bots]
     mapfile = "maps/map%s.txt" % map
-    outcome = engine.play_game(mapfile, 1000, 75, players, False)
+    outcome = engine.play_game(mapfile, 1000, 50, players, False)
     sys.stdout.write("game result: \n%s\n" %\
             "\n".join(["%s: %s" % (a,b) for (a,b) in outcome.iteritems()
                                         if a != "playback"]))
