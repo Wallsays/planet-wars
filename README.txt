@@ -33,6 +33,8 @@ Other:
       *
       * Add the flag --gui to record the playback from the game to playback.log
       * and feed that to the Java visualizer included in your starter package.
+    3. Note: current turns count limit up 70 due to slow proccessing.
+       U can change it in was2.py on 34-th line.
     
 
 Improvements (next version);
