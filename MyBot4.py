@@ -22,6 +22,12 @@ messageHistory = []
 allies_nicks = []
 next_targets = []
 
+# -------------------------------------------------
+#   TODO:
+#     - 'co-op' and 'calculate targets' sections refactoring
+#     - fleets iteration optimization
+#     - encapsulate f.write 
+# -------------------------------------------------
 
 def DoTurn(pw, group_ids, nickname, f):
   commandGame = False
@@ -69,6 +75,7 @@ def DoTurn(pw, group_ids, nickname, f):
   myPlanets = []
   enemyPlanets = []
   alliesPlanets = []
+  neutralPlanets = []
   # Fleets
   myFleets = []
   partyFleets = []
@@ -115,6 +122,13 @@ def DoTurn(pw, group_ids, nickname, f):
       enemySize += p.NumShips()
       enemyGrowth += p.GrowthRate()
 
+  # Neutral planets without allies fleets in space
+  neutralPlanets = pw.NeutralPlanets()
+  for fleet in alliesFleets:
+    if fleet.DestinationPlanet() in ([p.PlanetID() for p in neutralPlanets]):
+      neutralPlanets.remove( pw.GetPlanet(fleet.DestinationPlanet()) )
+
+
   if ( enemySize <= 0 ):
     winRatio = 0
   else:
@@ -122,14 +136,51 @@ def DoTurn(pw, group_ids, nickname, f):
   
   f.write('winRatio: ' + str(winRatio) + '\n')
 
+  if winRatio >= 2.5:
+    return # regeneration
+
+  f.write('======= Calculate Available ships \
+            based on upcoming enemy fleets ======= \n')
+
   # available ships
   available_ships = {}
   for my_pln in myPlanets:
     available_ships[my_pln.PlanetID()] = my_pln.NumShips()
   f.write('available_ships: ' + str(available_ships) + '\n')
+ 
+  # save fleets for defence (game w/o help - not good strategy :( )
+  defend_req = {}
+  for fleet in enemyFleets:
+    att_pl = pw.GetPlanet( fleet.DestinationPlanet() )
+    if att_pl.PlanetID() in ([p.PlanetID() for p in myPlanets]):
+      if fleet.TurnsRemaining()*att_pl.GrowthRate() + att_pl.NumShips() < \
+        fleet.NumShips():
+        available_ships[att_pl.PlanetID()] = 0 # let the battle begin
+      else:
+        upc_ships = fleet.NumShips()
+        available_ships[att_pl.PlanetID()] -= upc_ships
+
+  # prevent closest planets attack
+  for my_pln in myPlanets:
+    distances = []
+    for att_pln in enemyPlanets:
+      if att_pln.NumShips() == 0:
+        continue
+      dist = pw.Distance(my_pln.PlanetID(), att_pln.PlanetID())
+      distances.append([att_pln, dist])
+    distances.sort(key=lambda x: x[1], reverse=True)
+    worst_case = 0
+    for att_rank in distances[:3]:
+      # if att_rank[1] > 
+      if worst_case < att_rank[0].NumShips():
+        worst_case = att_rank[0].NumShips()
+    if available_ships[my_pln.PlanetID()] < worst_case:
+      available_ships[att_pln.PlanetID()] = 0 # wait
 
 
-  f.write('======= Stop Spreading Enemy on NP ======= \n')
+      
+
+  f.write('======= Prevent Spreading Enemy on Neutral Planets ======= \n')
   for efl in enemyFleets:
     if efl.TurnsRemaining() < 5 and\
       pw.GetPlanet(efl.DestinationPlanet()).Owner() == 0:
@@ -156,12 +207,11 @@ def DoTurn(pw, group_ids, nickname, f):
             if (alliesSize + mySize) > req_ships:
               scores = []
               for my_pl in myPlanets:
-                if my_pl.NumShips() < my_pl.GrowthRate()*10:
+                if available_ships[my_pl.PlanetID()] < my_pl.GrowthRate()*10 or \
+                  att_pln.Owner() == 1:
                   continue
-                if att_pln.Owner() == 1:
-                  continue
-                f.write('score: pw.Distance(...): ' + str(pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())) + '\n')
-                score = float(my_pl.NumShips()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+                # f.write('score: pw.Distance(...): ' + str(pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())) + '\n')
+                score = float(available_ships[my_pl.PlanetID()]) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
                 scores.append([my_pl, score])
               scores.sort(key=lambda x: x[1], reverse=True)
               f.write('scores: ' + str(scores) + '\n')
@@ -175,7 +225,7 @@ def DoTurn(pw, group_ids, nickname, f):
               # send only req-d num of ships
               for flt in partyFleets:
                 if flt.DestinationPlanet() == att_pln.PlanetID():
-                  still_need += flt.NumShips() - (att_pln.GrowthRate() * flt.TurnsRemaining())*2
+                  still_need -= flt.NumShips() - (att_pln.GrowthRate() * flt.TurnsRemaining())*2
               req_ships = still_need
 
 
@@ -209,7 +259,7 @@ def DoTurn(pw, group_ids, nickname, f):
                         req_ships2 = req_ships - req_ships1
                         if available_ships[source1.PlanetID()] >= req_ships1 and \
                           available_ships[source2.PlanetID()] >= req_ships2:
-                          "ee"
+                          "???"
                           # available_ships[source1.PlanetID()] -= req_ships1
                           # available_ships[source2.PlanetID()] -= req_ships2
                           # pw.IssueOrder(source1.PlanetID(), att_pln.PlanetID(), req_ships1)
@@ -217,7 +267,11 @@ def DoTurn(pw, group_ids, nickname, f):
                 if len(distances) == 1 or \
                   source1.PlanetID() == source2.PlanetID():
                   f.write('222\n')
-                  req_ships += att_pln.GrowthRate()*distances[0][1]
+                  req_ships += att_pln.GrowthRate()*pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+                  dec = int(len(group_ids)*3) #1.85)
+                  if dec ==0:
+                    dec = 1
+                  req_ships = int(req_ships/dec)
                   # req_ships += att_pln.GrowthRate()*pw.Distance(source1.PlanetID(), att_pln.PlanetID())
                   # req_ships += att_pln.GrowthRate()*3
                   # req_ships += available_ships[source1.PlanetID()] - 10
@@ -234,7 +288,35 @@ def DoTurn(pw, group_ids, nickname, f):
                     # next_targets.append(att_pln.PlanetID())
 
 
+  
+  f.write('======= Neutral Planets Pre-processing ======= \n')
+  # f.write("neutralPlanets: " + str(neutralPlanets) + '\n')
+  # neutral_targets = []
+  # for my_pl in myPlanets:
+  #   if available_ships[my_pl.PlanetID()] < my_pl.GrowthRate()*10 or available_ships[my_pl.PlanetID()] == 0:
+  #     continue
+  #   distances = []
+  #   for att_pln in neutralPlanets:
+  #     score = float(att_pln.NumShips() + 5*att_pln.GrowthRate()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+  #     # dist = pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+  #     distances.append([att_pln, score])
+  #   distances.sort(key=lambda x: x[1], reverse=True)
+  #   # f.write('distances: ' + str(distances) + '\n')
+  #   ordered = ([pl_rank[0] for pl_rank in distances])
+  #   for item in ordered[:1]:
+  #     f.write('item: ' + str(item) + '\n')
+  #     if item in neutral_targets:
+  #       continue
+  #     neutral_targets.append(item)
 
+  # f.write("neutral_targets: " + str(neutral_targets) + '\n')
+  dec = int(len(neutralPlanets)/2)
+  if dec > 0:
+    neutralPlanets = random.sample(neutralPlanets,dec) 
+  f.write("neutralPlanets: " + str(neutralPlanets) + '\n')
+
+  enemyPlanets += neutralPlanets
+  # enemyPlanets += neutral_targets
 
 
 
@@ -245,17 +327,27 @@ def DoTurn(pw, group_ids, nickname, f):
   for att_pln in enemyPlanets:
     distances = []
     for my_pl in myPlanets:
-      if my_pl.NumShips() < my_pl.GrowthRate()*10:
+      if available_ships[my_pl.PlanetID()] < my_pl.GrowthRate()*10:
           continue
-      # score = float(my_pl.NumShips()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
-      dist = pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
-      distances.append([my_pl, dist])
+      score = float(my_pl.NumShips()) / pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+      # dist = pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
+      distances.append([my_pl, score])
     distances.sort(key=lambda x: x[1], reverse=True)
-    f.write('distances: ' + str(distances) + '\n')
+    # f.write('distances: ' + str(distances) + '\n')
     
-    # req_orig_ships = att_pln.NumShips()
-    # f.write('req_orig_ships: ' + str(req_orig_ships) + '\n')
     req_ships = att_pln.NumShips() + 1
+    still_need = req_ships
+    # f.write('enemyFleets: ' + str(enemyFleets) + '\n')
+    # send only req-d num of ships
+    for flt in partyFleets:
+      if flt.DestinationPlanet() == att_pln.PlanetID():
+        still_need -= flt.NumShips() - (att_pln.GrowthRate() * flt.TurnsRemaining())
+    req_ships = still_need
+
+    if req_ships < 10:
+      continue
+
+    # f.write('req_orig_ships: ' + str(req_orig_ships) + '\n')
     f.write('req_ships: ' + str(req_ships) + '\n')
     if len(distances) > 0:
       source1 = distances[0][0] # source planet
@@ -311,9 +403,10 @@ def DoTurn(pw, group_ids, nickname, f):
       if len(distances) == 1 or \
         source1.PlanetID() == source2.PlanetID():
         f.write('222\n')
-        req_ships += att_pln.GrowthRate()*distances[0][1]
+        req_ships += att_pln.GrowthRate()*pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
         req_ships += att_pln.GrowthRate()*3
         f.write("new req: " + str(req_ships) + '\n')
+        # f.write("distances[0][1]: " + str(distances[0][1]) + '\n')
         if available_ships[source1.PlanetID()] >= req_ships:
           f.write('av: ' + str(available_ships[source1.PlanetID()]) + '\n')
           available_ships[source1.PlanetID()] -= req_ships
@@ -331,7 +424,7 @@ def DoTurn(pw, group_ids, nickname, f):
     else:  
       next_targets.append(att_pln.PlanetID())
   
-  f.write('next_targets (init): ' + str(next_targets) + '\n')
+  # f.write('next_targets (init): ' + str(next_targets) + '\n')
 
   tmp = []
   score = -999999

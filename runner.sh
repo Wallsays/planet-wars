@@ -21,11 +21,21 @@
 # python war2.py 16 "example_bots/RageBot.jar" "example_bots/DualBot.jar" "example_bots/RageBot.jar" "example_bots/DualBot.jar" --gui
 # python war2.py 13 "python ./MyBot4.py" "python ./MyBot3.py" --gui
 
-# Nickanmes format: %s%d (ex. R1)
+#
+#   Nickanmes format: %s%d (ex. R1)
+#
 # python war2.py 16 "python ./RageBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
 # python war2.py 16 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
 # python war2.py 70 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
-# python war2.py 110 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" "python ./MyBot4.py -g 6,7,8 -n E1" "python ./MyBot4.py -g 5,7,8 -n E2" "python ./MyBot4.py -g 5,6,8 -n E3" "python ./MyBot4.py -g 5,6,7 -n E4"
+
+# 100 planets map
+# python war2.py 110 "python ./DualBot.py -g 2 -n R1" "python ./DualBot.py -g 1 -n R2" "python ./RageBot.py -g 4 -n K1" "python ./RageBot.py -g 3 -n K2" "python ./MyBot4.py -g 6,7,8 -n E1" "python ./MyBot4.py -g 5,7,8 -n E2" "python ./MyBot4.py -g 5,6,8 -n E3" "python ./MyBot4.py -g 5,6,7 -n E4"
+
 # python war2.py 16 "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 3,4 -n K1" "python ./MyBot4.py -g 2,4 -n K2" "python ./MyBot4.py -g 2,3 -n K3" --gui
 # python war2.py 48 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
-python war2.py 48 "python ./DualBot.py -g 2 -n R1" "python ./DualBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+# python war2.py 48 "python ./DualBot.py -g 2 -n R1" "python ./DualBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+# python war2.py 165 "python ./DualBot.py -g 2,3 -n C1" "python ./DualBot.py -g 1,3 -n C2" "python ./DualBot.py -g 2,3 -n R1" "python ./MyBot4.py -g 5 -n K1" "python ./MyBot4.py -g 4 -n K2" #--gui
+# python war2.py 16 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+# python war2.py 32 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+# python war2.py 32 "python ./RageBot.py -g 2 -n R2" "python ./DualBot.py -g 1 -n R1"  "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+python war2.py 80 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui

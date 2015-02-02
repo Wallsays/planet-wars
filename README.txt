@@ -1,10 +1,12 @@
-
+=== MyBot4.py ===
 
 Current strategy - "Kill Game":
-  1. Gang murder if my next-targets in any message from team-mate
-  1. Analyze enemy planets
-  2. Hit 'em from most closest and powerfull planets
-  3. Send next 3 targets in message
+  1. Calculate available ships (based on upcoming enemy 
+     fleets and closest enemy planets)
+  2. Group attack if my next-targets in any message from team-mate
+  3. Analyze enemy planets
+  3. Hit 'em from most closest and powerfull planets
+  5. Send next 3 targets in message
 
 Messaging algo:
   1. Send planet-ID on first turn
@@ -37,7 +39,7 @@ Other:
        U can change it in was2.py on 34-th line.
     
 
-Improvements (next version);
+Future Improvements:
   General Strategy:
     1. Don't lose planets
     2. Make ships faster than the enemy
