@@ -104,6 +104,7 @@ def DoTurn(pw, group_ids, nickname):
 
 def main():
   nickname = 'X'
+  group_ids = []
   if '-g' in sys.argv:
     group_ids = [int(k) for k in sys.argv[2].split(',')]
   if '-n' in sys.argv:

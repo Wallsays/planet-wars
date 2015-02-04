@@ -260,7 +260,7 @@ class PlanetWars:
         #            float(tokens[2])) # Y
         # 
         # updated map format
-        p = Planet(int(tokens[1]), # The ID of this planet
+        p = Planet(int(tokens[1])-1, # The ID of this planet
            int(tokens[5]), # Owner
            int(tokens[6]), # Num ships
            int(tokens[4]), # Growth rate

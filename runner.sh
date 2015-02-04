@@ -48,7 +48,8 @@
 #  1,2 - first group, 3,4 - 2nd group
 # python war2.py 901 "python ./RageBot.py -g 2 -n R" "python ./RageBot.py -g 1 -n S" "python ./MyBot4.py -g 4 -n K" "python ./MyBot4.py -g 3 -n J" --gui
 # python war2.py 900 "python ./RageBot.py -g 2 -n R" "python ./RageBot.py -g 1 -n S" "python ./MyBot4.py -g 4 -n K" "python ./MyBot4.py -g 3 -n J" --gui
-python war2.py 900  "python ./MyBot4.py -g 2 -n K" "python ./MyBot4.py -g 1 -n J" "python ./RageBot.py -g 4 -n R" "python ./RageBot.py -g 3 -n S" --gui
+# python war2.py 900  "python ./MyBot4.py -g 2 -n K" "python ./MyBot4.py -g 1 -n J" "python ./RageBot.py -g 4 -n R" "python ./RageBot.py -g 3 -n S" --gui
+python war2.py 901 "python ./MyBot4.py -g 2 -n K" "python ./MyBot4.py -g 1 -n J" "python ./RageBot.py" "python ./DualBot.py" --gui
 
 
 

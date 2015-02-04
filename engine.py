@@ -28,7 +28,7 @@ def read_map_file(map):
       #   "growth_rate" : int(tokens[5])
       # })
       planets.append({
-        "id" : (int(tokens[1])-1),
+        "id" : int(tokens[1]),
         "x" : float(tokens[2]),
         "y" : float(tokens[3]),
         "owner" : int(tokens[5]),

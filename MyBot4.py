@@ -15,6 +15,7 @@
 """
 from PlanetWars import PlanetWars
 
+from sys import stdout
 import random
 import sys
 
@@ -31,6 +32,11 @@ next_targets = []
 
 def DoTurn(pw, group_ids, nickname, f):
   commandGame = False
+
+  for plan in pw.MyPlanets():
+    f.write('planet ' + str(plan.PlanetID() ) + '\n')
+    f.write('planet ' + str(plan ) + '\n')
+    
 
   # send planet position
   if not messageHistory:
@@ -51,15 +57,16 @@ def DoTurn(pw, group_ids, nickname, f):
   if not allies_nicks and messageHistory:
     tmp = messageHistory[-1]
     for msh in tmp:
-      # f.write('=====msh[1]' + str(msh[1] ) + '\n')
+      f.write('=====msh[1] text: ' + str(msh[1] ) + '\n')
       for pln in pw.Planets():
+        # f.write('pln.Owner(): ' + str( pln.Owner() ) + '\n')
         if pln.PlanetID() == int(msh[1]) and \
           pln.Owner() in group_ids:
-          # f.write('=====if' + str(pln.PlanetID() ) + '\n')
+          f.write('=====if' + str(pln.PlanetID() ) + '\n')
           for gip in group_ids:
             if pln.Owner() == int(gip):
               allies_nicks.append(( msh[0], pln.Owner() ))
-              # f.write('=====planet.Owner()' + str(pln.Owner() ) + '\n')
+              f.write('=====planet.Owner()' + str(pln.Owner() ) + '\n')
               
   f.write('last mes: ' + str(messageHistory[-1]) + '\n')
   f.write('allies_nicks ' + str(allies_nicks) + '\n')
@@ -310,15 +317,18 @@ def DoTurn(pw, group_ids, nickname, f):
 
   # f.write("neutral_targets: " + str(neutral_targets) + '\n')
   my_top_pl_id = -1
-  source_score = -1
+  source_score = -999.0
   for my_pl in myPlanets:
     score = int(my_pl.NumShips())
     if score > source_score:
       source_score = score
       my_top_pl_id = my_pl.PlanetID()
+  f.write("my_top_pl_id: " + str(my_top_pl_id) + '\n')
 
   neut_score = []  
   for ne_pl in neutralPlanets:
+    # f.write("ne_pl: " + str(ne_pl) + '\n')
+    f.write("ne_pl id: " + str(ne_pl.PlanetID()) + '\n')
     gr = ne_pl.GrowthRate() 
     if gr == 0:
       gr = 1
@@ -339,6 +349,7 @@ def DoTurn(pw, group_ids, nickname, f):
   for ne_pl in neut_score[:dec]:
     tmp.append(ne_pl[0])
   neutralPlanets = tmp
+  f.write("tmp: " + str(tmp) + '\n')
 
   dec = int(len(neutralPlanets)/2)
   if dec > 0:
@@ -674,10 +685,14 @@ def DoTurn(pw, group_ids, nickname, f):
 def main():
   group_ids = []
   nickname = 'X'
+  mz_map_edit = False
+  my_id = -1
   if '-g' in sys.argv:
     group_ids = [int(k) for k in sys.argv[2].split(',')]
   if '-n' in sys.argv:
     nickname = str(sys.argv[4])
+  if '-mz' in sys.argv:
+    mz_map_edit = True
   f = open('MyBot4_' + str(nickname)+ '.log', 'w')
   f.write('group: ' + str(group_ids) + '\n')
   f.write('nick: ' + str(nickname) + '\n')
@@ -687,6 +702,38 @@ def main():
     current_line = raw_input()
     f.write(current_line + '\n')
     if len(current_line) >= 1 and current_line.startswith("."):
+      
+      if mz_map_edit:
+        tmp_map = ''
+        lines = map_data.split("\n")
+        if my_id < 0:
+          for line in lines:
+            line = line.split("#")[0]
+            tokens = line.split(" ")
+            if tokens[0] == "Y":
+              if len(tokens) == 2:
+                my_id = int(tokens[1])
+                f.write('my_id: ' + str(my_id) + '\n')
+        for line in lines:
+          line = line.split("#")[0] # remove comments
+          tokens = line.split(" ")
+          if tokens[0] == "P":
+            if len(tokens) == 7:
+              new_line = line
+              if int(tokens[5]) == my_id:
+                # stdout.write('1-- ' + "\n")
+                new_line = "P " +  str(tokens[1]) + " " + str(float(tokens[2])) + " " + str(float(tokens[3])) + " " +  str(int(tokens[4])) +  " " + str(1) + " " + str(int(tokens[6]))
+                new_line = new_line.replace(".0 ", " ")
+              elif int(tokens[5]) == 1:
+                # stdout.write('2-- ' + "\n")
+                new_line = "P " +  str(tokens[1]) + " " + str(float(tokens[2])) + " " + str(float(tokens[3])) + " " +  str(int(tokens[4])) +  " " + str(my_id) + " " + str(int(tokens[6]))
+                new_line = new_line.replace(".0 ", " ")
+            tmp_map += new_line + '\n'  
+          else:
+            tmp_map += line + '\n'
+        # stdout.write(str(tmp_map)+ "\n")
+        map_data = tmp_map
+
       pw = PlanetWars(map_data)
       f.write('-------------- NEW TURN ----------------\n')
       DoTurn(pw, group_ids, nickname, f)
