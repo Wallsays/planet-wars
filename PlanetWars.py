@@ -264,8 +264,8 @@ class PlanetWars:
            int(tokens[5]), # Owner
            int(tokens[6]), # Num ships
            int(tokens[4]), # Growth rate
-           int(tokens[2]), # X
-           int(tokens[3])) # Y
+           float(tokens[2]), # X
+           float(tokens[3])) # Y
         planet_id += 1
         self._planets.append(p)
       elif tokens[0] == "F":

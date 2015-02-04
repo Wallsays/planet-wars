@@ -76,7 +76,7 @@ def DoTurn(pw, group_ids, nickname, f):
   myPlanets = []
   enemyPlanets = []
   alliesPlanets = []
-  neutralPlanets = []
+  neutralPlanets = pw.NeutralPlanets()
   # Fleets
   myFleets = []
   partyFleets = []
@@ -124,7 +124,6 @@ def DoTurn(pw, group_ids, nickname, f):
       enemyGrowth += p.GrowthRate()
 
   # Neutral planets without allies fleets in space
-  neutralPlanets = pw.NeutralPlanets()
   for fleet in alliesFleets:
     if fleet.DestinationPlanet() in ([p.PlanetID() for p in neutralPlanets]):
       neutralPlanets.remove( pw.GetPlanet(fleet.DestinationPlanet()) )
@@ -175,7 +174,7 @@ def DoTurn(pw, group_ids, nickname, f):
       if worst_case < att_rank[0].NumShips():
         worst_case = att_rank[0].NumShips()
     if available_ships[my_pln.PlanetID()] < worst_case:
-      available_ships[att_pln.PlanetID()] = 0 # wait
+      available_ships[my_pln.PlanetID()] = 0 # wait
 
 
       
@@ -268,7 +267,7 @@ def DoTurn(pw, group_ids, nickname, f):
                   source1.PlanetID() == source2.PlanetID():
                   f.write('222\n')
                   req_ships += att_pln.GrowthRate()*pw.Distance(my_pl.PlanetID(), att_pln.PlanetID())
-                  dec = int(len(group_ids)*3) #1.85)
+                  dec = int(len(group_ids)*1.5) #1.85)
                   if dec ==0:
                     dec = 1
                   req_ships = int(req_ships/dec)
@@ -310,6 +309,37 @@ def DoTurn(pw, group_ids, nickname, f):
   #     neutral_targets.append(item)
 
   # f.write("neutral_targets: " + str(neutral_targets) + '\n')
+  my_top_pl_id = -1
+  source_score = -1
+  for my_pl in myPlanets:
+    score = int(my_pl.NumShips())
+    if score > source_score:
+      source_score = score
+      my_top_pl_id = my_pl.PlanetID()
+
+  neut_score = []  
+  for ne_pl in neutralPlanets:
+    gr = ne_pl.GrowthRate() 
+    if gr == 0:
+      gr = 1
+    ns = ne_pl.NumShips()
+    if ns == 0:
+      ns = 1
+    dist = 1
+    if my_top_pl_id >= 0:
+      dist = pw.Distance(ne_pl.PlanetID(), my_top_pl_id)
+    score = float(gr) / (ns * dist)
+    neut_score.append([ne_pl, score])
+  neut_score.sort(key=lambda x: x[1], reverse=True)
+
+  tmp = []
+  dec = int(len(neut_score)/2)
+  if dec > 0:
+    dec = 1
+  for ne_pl in neut_score[:dec]:
+    tmp.append(ne_pl[0])
+  neutralPlanets = tmp
+
   dec = int(len(neutralPlanets)/2)
   if dec > 0:
     neutralPlanets = random.sample(neutralPlanets,dec) 
@@ -344,7 +374,7 @@ def DoTurn(pw, group_ids, nickname, f):
         still_need -= flt.NumShips() - (att_pln.GrowthRate() * flt.TurnsRemaining())
     req_ships = still_need
 
-    if req_ships < 10:
+    if (req_ships < 10 and not att_pln.Owner() == 0) or req_ships < 0:
       continue
 
     # f.write('req_orig_ships: ' + str(req_orig_ships) + '\n')

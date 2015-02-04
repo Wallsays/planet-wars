@@ -29,8 +29,8 @@ def read_map_file(map):
       # })
       planets.append({
         "id" : (int(tokens[1])-1),
-        "x" : int(tokens[2]),
-        "y" : int(tokens[3]),
+        "x" : float(tokens[2]),
+        "y" : float(tokens[3]),
         "owner" : int(tokens[5]),
         "num_ships" : int(tokens[6]),
         "growth_rate" : int(tokens[4])
@@ -70,7 +70,7 @@ def serialize_planet(p, pov):
   owner = switch_pov(int(p["owner"]), pov)
   # message = "P " + str(p["x"]) + " " + str(p["y"]) + " " + str(owner) + \
   #   " " + str(int(p["num_ships"])) + " " + str(int(p["growth_rate"]))
-  message = "P " +  str(p["id"]) + " " + str(int(p["x"])) + " " + str(p["y"]) + " " +  str(int(p["growth_rate"])) + \
+  message = "P " +  str(p["id"]) + " " + str(float(p["x"])) + " " + str(float(p["y"])) + " " +  str(int(p["growth_rate"])) + \
     " " + str(owner) + " " + str(int(p["num_ships"]))
   return message.replace(".0 ", " ")
 
