@@ -20,12 +20,20 @@ def read_map_file(map):
     if len(tokens) == 0:
       pass
     elif tokens[0] == "p":
+      # planets.append({
+      #   "x" : float(tokens[1]),
+      #   "y" : float(tokens[2]),
+      #   "owner" : int(tokens[3]),
+      #   "num_ships" : int(tokens[4]),
+      #   "growth_rate" : int(tokens[5])
+      # })
       planets.append({
-        "x" : float(tokens[1]),
-        "y" : float(tokens[2]),
-        "owner" : int(tokens[3]),
-        "num_ships" : int(tokens[4]),
-        "growth_rate" : int(tokens[5])
+        "id" : (int(tokens[1])-1),
+        "x" : int(tokens[2]),
+        "y" : int(tokens[3]),
+        "owner" : int(tokens[5]),
+        "num_ships" : int(tokens[6]),
+        "growth_rate" : int(tokens[4])
       })
     elif tokens[0] == "f":
       fleets.append({
@@ -60,8 +68,10 @@ def switch_pov(player_id, pov):
 # about the planets to the client programs.
 def serialize_planet(p, pov):
   owner = switch_pov(int(p["owner"]), pov)
-  message = "P " + str(p["x"]) + " " + str(p["y"]) + " " + str(owner) + \
-    " " + str(int(p["num_ships"])) + " " + str(int(p["growth_rate"]))
+  # message = "P " + str(p["x"]) + " " + str(p["y"]) + " " + str(owner) + \
+  #   " " + str(int(p["num_ships"])) + " " + str(int(p["growth_rate"]))
+  message = "P " +  str(p["id"]) + " " + str(int(p["x"])) + " " + str(p["y"]) + " " +  str(int(p["growth_rate"])) + \
+    " " + str(owner) + " " + str(int(p["num_ships"]))
   return message.replace(".0 ", " ")
 
 # Generates a string representation of a fleet. This is used to send data
@@ -361,7 +371,7 @@ def play_game(map, max_turn_time, max_turns, players, debug=False):
         if line == ".":
           client_done[i] = True
         # Get messages from players
-        elif re.match( r'^[a-z][0-9]\s[-]{0,1}[0-9]{1,10}$', line, re.M):
+        elif re.match( r'^[a-z]\s[-]{0,1}[0-9]{1,10}$', line, re.M):
           player_messages.append(line + '\n')
           # sys.stderr.write("player " + str(i+1) + " message: " + line + "\n")
           continue

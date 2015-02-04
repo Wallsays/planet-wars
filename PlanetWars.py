@@ -249,14 +249,23 @@ class PlanetWars:
       if len(tokens) == 1:
         continue
       if tokens[0] == "P":
-        if len(tokens) != 6:
+        # if len(tokens) != 6: # for prev map format
+        if len(tokens) != 7:
           return 0
-        p = Planet(planet_id, # The ID of this planet
-                   int(tokens[3]), # Owner
-                   int(tokens[4]), # Num ships
-                   int(tokens[5]), # Growth rate
-                   float(tokens[1]), # X
-                   float(tokens[2])) # Y
+        # p = Planet(planet_id, # The ID of this planet
+        #            int(tokens[3]), # Owner
+        #            int(tokens[4]), # Num ships
+        #            int(tokens[5]), # Growth rate
+        #            float(tokens[1]), # X
+        #            float(tokens[2])) # Y
+        # 
+        # updated map format
+        p = Planet(int(tokens[1]), # The ID of this planet
+           int(tokens[5]), # Owner
+           int(tokens[6]), # Num ships
+           int(tokens[4]), # Growth rate
+           int(tokens[2]), # X
+           int(tokens[3])) # Y
         planet_id += 1
         self._planets.append(p)
       elif tokens[0] == "F":
@@ -269,7 +278,8 @@ class PlanetWars:
                   int(tokens[5]), # Total trip length
                   int(tokens[6])) # Turns remaining
         self._fleets.append(f)
-      elif re.match( r'^[A-Z][0-9]', tokens[0], re.M):
+      # elif re.match( r'^[A-Z][0-9]', tokens[0], re.M):
+      elif re.match( r'^[A-Za-z]\s[-]{0,1}[0-9]{1,10}$', line, re.M):
         if len(tokens) != 2:
           return 0
         m = Message(str(tokens[0]), # Nickname

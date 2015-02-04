@@ -38,4 +38,16 @@
 # python war2.py 16 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
 # python war2.py 32 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
 # python war2.py 32 "python ./RageBot.py -g 2 -n R2" "python ./DualBot.py -g 1 -n R1"  "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
-python war2.py 80 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+# python war2.py 80 "python ./DualBot.py -g 2 -n R1" "python ./RageBot.py -g 1 -n R2" "python ./MyBot4.py -g 4 -n K1" "python ./MyBot4.py -g 3 -n K2" --gui
+
+# New map format 
+#
+# python war2.py 900 "python ./RageBot.py -g 2 -n R" "python ./RageBot.py -g 1 -n S" "python ./MyBot4.py -g 4 -n K" "python ./MyBot4.py -g 3 -n J" --gui
+# python war2.py 900 "python ./MyBot4.py -g 2 -n K" "python ./MyBot4.py -g 1 -n J" "python ./RageBot.py -g 4 -n R" "python ./RageBot.py -g 3 -n S"  --gui 
+
+#  1,2 - first group, 3,4 - 2nd group
+python war2.py 900 "python ./RageBot.py -g 2 -n R" "python ./RageBot.py -g 1 -n S" "python ./MyBot4.py -g 4 -n K" "python ./MyBot4.py -g 3 -n J" --gui
+
+
+
+

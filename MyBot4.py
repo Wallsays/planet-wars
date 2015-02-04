@@ -34,8 +34,9 @@ def DoTurn(pw, group_ids, nickname, f):
 
   # send planet position
   if not messageHistory:
-    mes = pw.MyPlanets()[0].PlanetID()
-    pw.SendMessage(nickname,mes)
+    if len(pw.MyPlanets()) > 0:
+      mes = pw.MyPlanets()[0].PlanetID()
+      pw.SendMessage(nickname,mes)
   # else:
   #   mes = random.randint(-214783648, 2147483647)
 
@@ -136,11 +137,10 @@ def DoTurn(pw, group_ids, nickname, f):
   
   f.write('winRatio: ' + str(winRatio) + '\n')
 
-  if winRatio >= 2.5:
-    return # regeneration
+  # if winRatio >= 2.5:
+  #   return # regeneration
 
-  f.write('======= Calculate Available ships \
-            based on upcoming enemy fleets ======= \n')
+  f.write('======= Calculate Available ships based on upcoming enemy fleets ======= \n')
 
   # available ships
   available_ships = {}
